@@ -67,4 +67,4 @@ curl -X POST http://127.0.0.1:8000/api/predict \
 
 ## Note
 
-This project is for educational use and not financial advice.
+This project is for educational use and not financial advice. All rights are reserved under me.
