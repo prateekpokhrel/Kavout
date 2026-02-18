@@ -1,0 +1,7 @@
+﻿fastapi
+uvicorn[standard]
+torch
+numpy
+pandas
+yfinance
+pydantic

@@ -1,0 +1,9 @@
+﻿*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.venv/
+backend/artifacts/*.pt
+frontend/node_modules/
+frontend/dist/
+.env
