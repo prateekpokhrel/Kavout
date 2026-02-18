@@ -14,6 +14,11 @@ from .schemas import (
 )
 from .trainer import train_and_save_model
 
+# NEW IMPORTS FOR RENDER DEPLOYMENT
+import uvicorn
+import os
+
+
 app = FastAPI(
     title="Indian Stock DLinear API",
     version="2.0.0",
@@ -39,6 +44,7 @@ def symbols_endpoint(
     data_source: DataSource = Query(default="auto"),
     local_data_dir: str | None = Query(default=None),
 ) -> SymbolsResponse:
+
     if data_source == "yfinance":
         return SymbolsResponse(source="yfinance", symbols=[])
 
@@ -54,6 +60,7 @@ def history_endpoint(
     data_source: DataSource = Query(default="auto"),
     local_data_dir: str | None = Query(default=None),
 ) -> HistoryResponse:
+
     try:
         result = get_history_for_ticker(
             raw_ticker=ticker,
@@ -62,31 +69,43 @@ def history_endpoint(
             local_data_dir=local_data_dir,
             period=period,
         )
+
         return HistoryResponse(**result)
+
     except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        raise HTTPException(status_code=404, detail=str(exc))
+
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise HTTPException(status_code=400, detail=str(exc))
+
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"History failed: {exc}") from exc
+        raise HTTPException(status_code=500, detail=f"History failed: {exc}")
 
 
 @app.post("/api/train", response_model=TrainResponse)
 def train_endpoint(req: TrainRequest) -> TrainResponse:
+
     try:
+
         result = train_and_save_model(req)
+
         return TrainResponse(**result)
+
     except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        raise HTTPException(status_code=404, detail=str(exc))
+
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise HTTPException(status_code=400, detail=str(exc))
+
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Training failed: {exc}") from exc
+        raise HTTPException(status_code=500, detail=f"Training failed: {exc}")
 
 
 @app.post("/api/predict", response_model=PredictResponse)
 def predict_endpoint(req: PredictRequest) -> PredictResponse:
+
     try:
+
         result = predict_with_saved_model(
             raw_ticker=req.ticker,
             horizon=req.horizon,
@@ -94,10 +113,26 @@ def predict_endpoint(req: PredictRequest) -> PredictResponse:
             data_source=req.data_source,
             local_data_dir=req.local_data_dir,
         )
+
         return PredictResponse(**result)
+
     except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+        raise HTTPException(status_code=404, detail=str(exc))
+
     except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
+        raise HTTPException(status_code=400, detail=str(exc))
+
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}") from exc
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {exc}")
+
+
+if __name__ == "__main__":
+
+    port = int(os.environ.get("PORT", 8000))
+
+    uvicorn.run(
+        "app.main:app",   # keep this same if file name is main.py inside app folder
+        host="0.0.0.0",
+        port=port,
+        reload=False
+    )
